@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Equalizr</title>
+    <style>
+      .equalizer-wrapper {
+          float:left; 
+          margin: 0 20px 20px 0;
+      }
+      .equalizer {
+          overflow: hidden;
+          border:1px solid #ddd;
+      }
+
+      .equalizer > div {
+          height: 100%;
+          display: inline-block;
+          background-color: pink;
+          border-top: 2px solid red;
+      }
+      .equalizer.small {
+          width: 100px;
+          height: 100px;
+      }
+      .equalizer.normal {
+          width: 200px;
+          height: 200px;
+      }
+      .equalizer.big {
+          width: 300px;
+          height: 300px;
+      }
+    </style>
+    <script>
+        function Equalizer(selector, timeout, colWidth) {
+            this.selector = selector;
+            this.timeout = timeout;
+            this.colWidth = colWidth;
+        }
+        Equalizer.prototype = {
+            setEqualizer : function() {
+                if (!this.colWidth) {
+                    this.colWidth = 1;
+                }
+                var equalizerBlock = document.querySelector(this.selector);
+                var colQuantity = Math.ceil(equalizerBlock.offsetWidth / this.colWidth)
+                var equalizerContent = document.createDocumentFragment();
+                this.equalizerElements = new Array(colQuantity);
+                for (var i = 0; i < colQuantity; i++) {
+                    var child = document.createElement('div');
+                    child.style.width = this.colWidth + 'px';
+                    equalizerContent.appendChild(child);
+                    this.equalizerElements[i] = child;
+                }
+                equalizerBlock.appendChild(equalizerContent);
+                this.runEqualizer(this.selector, this.timeout);
+            },
+            runEqualizer : function() {
+                // Supporting IE9 doesn't allow to use transition nor animation nor rAF
+                var length = this.equalizerElements.length;
+                var currentTransformValue = new Array(length),
+                    transformStepValue = new Array(length),
+                    iterationCount;
+
+                var self = this;
+
+                function init() {
+                    iterationCount =  self.timeout / 16.666666666; //60 fps
+                    for (var i = 0; i < length; i++) {
+                        currentTransformValue[i] = Math.random() * 100;
+                        transformStepValue[i] = (currentTransformValue[i] - 50) / iterationCount;
+                    }
+                    repeat_steep();
+                }
+
+                function repeat_steep() {
+                    for (var i = 0; i < length; i++) {
+                        // it will be better to use translate3d to avoid repaints, but IE9 doesn't support it
+                        self.equalizerElements[i].style.transform = 'translateY(' + currentTransformValue[i] + '%)';
+                        currentTransformValue[i] -= transformStepValue[i];
+                    }
+                    iterationCount--;
+                    if (iterationCount > 0) {
+                        setTimeout(repeat_steep, 16);
+                    } else {
+                        setTimeout(init, 0);
+                    }
+                }
+
+                init();
+            }
+        }
+
+        window.onload = function(){
+            new Equalizer('#eq_1 .equalizer', 1000, 2).setEqualizer();
+            new Equalizer('#eq_2 .equalizer', 1000, 2).setEqualizer();
+            new Equalizer('#eq_3 .equalizer', 1000, 2).setEqualizer();
+        }
+    </script>
+  </head>
+  <body>
+    <h1>Equalizers</h1>
+    <div id="eq_1" class="equalizer-wrapper">
+      <h2>First</h2>
+      <div class="equalizer small"></div>
+    </div>
+    <div id="eq_2" class="equalizer-wrapper">
+      <h2>Second</h2>
+      <div class="equalizer normal"></div>
+    </div>
+    <div id="eq_3" class="equalizer-wrapper">
+      <h2>Third</h2>
+      <div class="equalizer big"></div>
+    </div>
+  </body>
+</html>
